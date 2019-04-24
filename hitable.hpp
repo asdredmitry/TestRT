@@ -9,7 +9,6 @@ struct hit_rec
     float t;
     glm::vec3 p;
     glm::vec3 norm;
-    glm::vec3 anten;
     material * p_mat;
 };
 

@@ -51,7 +51,7 @@ class ray
             if(direction.length() != 0)
                 direction /= glm::length(direction);
         }
-        std::string toString()
+        std::string toString() const
         {
             std::stringstream ss;
             ss << " Origin - " << origin.x << " " << origin.y << " " << origin.y << "| Direction - " << 

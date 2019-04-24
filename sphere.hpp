@@ -5,23 +5,24 @@
 #include <glm/vec3.hpp>
 #include <iostream>
 #include <algorithm>
+#include "matherials.hpp"
 class sphere : public  hitable
 {
     //private:
     public:
         glm::vec3 center;
         float radius;
-        glm::vec3 anten;
+        material * mat;
     public:
         sphere():
             center(0.f, 0.f, 0.f),
             radius(0.f),
-            anten(0.f, 0.f, 0.f)
+            mat(NULL)
         {}
-        sphere(glm::vec3 c, float r, glm::vec3 a):
+        sphere(glm::vec3 c, float r, material * mat1):
             center(c),
             radius(r),
-            anten(a)
+            mat(mat1)
         {}
        virtual bool hit(const ray& r, float tmin, float tmax, hit_rec& rec)const;
 };
@@ -40,7 +41,7 @@ bool sphere::hit(const ray& r, float tmin, float tmax, hit_rec& rec)const
             rec.t = temp;
             rec.p = r.point_at_parameter(rec.t);
             rec.norm = (rec.p - center) /radius;
-            rec.anten = anten;
+            rec.p_mat = mat;
             return true;
         }
         temp = (-b + sqrt(discriminant))/a;
@@ -49,7 +50,7 @@ bool sphere::hit(const ray& r, float tmin, float tmax, hit_rec& rec)const
             rec.t = temp;
             rec.p = r.point_at_parameter(rec.t);
             rec.norm = (rec.p - center)/radius;
-            //rec.mat_ptr = mat;
+            rec.p_mat = mat;
             return true;
         }
     }

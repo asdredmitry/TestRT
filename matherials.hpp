@@ -26,13 +26,65 @@ glm::vec3 reflect(const glm::vec3& v, const glm::vec3& n)
     return v - 2*glm::dot(v,n)*n;
 }
 
-glm::vec3 refract(const glm::vec3& in, const glm::vec3& n, float ratio)
+bool refract(const glm::vec3& v, const glm::vec3& n, float ni_over_nt, glm::vec3& refracted)
 {
-    float dotinn = glm::dot(in, n);
-    glm::vec3 refracted = (in + dotinn*n)*ratio;
-    refracted -= dotinn*n;
-    return refracted;
+    glm::vec3 uv = v/glm::length(v);
+    glm::vec3 un = n/glm::length(n);
+    float dt =  dot(uv, un);
+    float discriminant = (1.0f - ni_over_nt*ni_over_nt*(1 - dt*dt));
+    if(discriminant > 0)
+    {
+        refracted = (uv - un*dt)*ni_over_nt - un*sqrtf(discriminant);
+        return true;
+    }
+    else 
+        return false;
 }
+
+float schlick(float cosine, float ref_idx)
+{
+    float r0 = (1 - ref_idx)/(1 + ref_idx);
+    r0 = r0*r0;
+    return r0 + (1 - r0)*pow((1 - cosine), 5);
+}
+
+class dielectric : public material { 
+    public:
+        dielectric(float ri) : ref_idx(ri) {}
+        virtual bool scatter(const ray& r_in, const hit_rec& rec, glm::vec3& attenuation, ray& scattered) const  {
+             glm::vec3 outward_normal;
+             glm::vec3 reflected = reflect(r_in.direction, rec.norm);
+             float ni_over_nt;
+             attenuation = glm::vec3(1.0, 1.0, 1.0); 
+             glm::vec3 refracted;
+             float reflect_prob;
+             float cosine;
+             if (glm::dot(r_in.direction, rec.norm) > 0) {
+                  outward_normal = -rec.norm;
+                  ni_over_nt = ref_idx;
+         //         cosine = ref_idx * dot(r_in.direction(), rec.normal) / r_in.direction().length();
+                  cosine = glm::dot(r_in.direction, rec.norm) / glm::length(r_in.direction);
+                  cosine = sqrt(1 - ref_idx*ref_idx*(1-cosine*cosine));
+             }
+             else {
+                  outward_normal = rec.norm;
+                  ni_over_nt = 1.0 / ref_idx;
+                  cosine = -glm::dot(r_in.direction, rec.norm) / glm::length(r_in.direction);
+             }
+             if (refract(r_in.direction, outward_normal, ni_over_nt, refracted)) 
+                reflect_prob = 0.0f;
+             else 
+                reflect_prob = 1.0;
+             if (drand48() < reflect_prob) 
+                scattered = ray(rec.p, reflected);
+             else 
+                scattered = ray(rec.p, refracted);
+             return true;
+        }
+
+        float ref_idx;
+};
+
 
 class glass: public material
 {
@@ -47,22 +99,26 @@ class glass: public material
         {}
         virtual bool scatter(const ray& in, const hit_rec& rec, glm::vec3& attenuation, ray& scattered)const
         {
-            glm::vec3 tmp;
+            glm::vec3 refracted;
             if(glm::dot(in.direction, rec.norm) > 0)
             {
-                tmp = refract(in.direction, -rec.norm, 1.f/coeff);
-                attenuation = albego;
-                scattered = ray(rec.p, tmp);
-                return true;
+                if(refract(in.direction, -rec.norm, 1./coeff, refracted))
+                {
+                    attenuation = albego;
+                    scattered = ray(rec.p, refracted);
+                    return true;
+                }
             }
             else
             {
-                tmp = refract(in.direction, rec.norm, coeff);
-                attenuation = albego;
-                scattered = ray(rec.p, tmp);
-                return true;
+                if(refract(in.direction, rec.norm, coeff, refracted))
+                {
+                    attenuation = albego;
+                    scattered = ray(rec.p, refracted);
+                    return true;
+                }
             }         
-            return true;
+            return false;
         }
 };
 

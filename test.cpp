@@ -1,9 +1,12 @@
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+#include <glm/mat3x3.hpp>
+#include <glm/glm.hpp>
 #include <iostream>
 #include <sstream>
+#include "obj_loader.hpp"
 #include <string.h>
-std::string toString(const glm::vec3 v)
+std::string toString(const glm::vec3& v)
 {
     std::stringstream ss;
     ss << v.x;
@@ -14,10 +17,31 @@ std::string toString(const glm::vec3 v)
     ss << " ";
     return ss.str();
 }
-int main()
+std::string toString(const glm::mat3x3& m)
 {
-    glm::vec3 v(0.0f, 0.0f, 0.1f);
-    glm::vec3 v1(1.0f, 0.0f, 0.1f);
-    glm::vec3 v2(v1);
-    return 0;
+}
+int main()
+{  
+    /*std::string s("add 0.1000   7.0 \n");
+    std::stringstream ss;
+    ss << s.substr(3, s.size());
+    float tmp;
+    while(!ss.eof())
+    {
+        ss >> tmp;
+        std::cout << tmp << std::endl;
+    }
+    */
+    //float tmp;
+    //float tmp1;
+    //ss >> tmp;
+    //ss >> tmp1;
+    //std::cout << tmp << std::endl;
+    //std::cout << tmp1 << std::endl;
+    loader_obj loader("cube.obj");
+    loader.loadData();
+    loader.printVerticies();
+    loader.printMesh();
+    
+    
 }
